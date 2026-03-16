@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Filament\Resources\Kelas\Pages;
+
+use App\Filament\Resources\Kelas\KelasResource;
+use Filament\Actions;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateKelas extends CreateRecord
+{
+    protected static string $resource = KelasResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return 'Kelas berhasil dibuat';
+    }
+}

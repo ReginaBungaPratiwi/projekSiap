@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Filament\Resources\JadwalPelajarans\Pages;
+
+use App\Filament\Resources\JadwalPelajarans\JadwalPelajaranResource;
+use Filament\Actions;
+use Filament\Resources\Pages\EditRecord;
+
+class EditJadwalPelajaran extends EditRecord
+{
+    protected static string $resource = JadwalPelajaranResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\DeleteAction::make(),
+        ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Jadwal pelajaran berhasil diperbarui';
+    }
+}
