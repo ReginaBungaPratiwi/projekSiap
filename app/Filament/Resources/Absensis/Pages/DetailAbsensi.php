@@ -11,7 +11,6 @@ class DetailAbsensi extends Page
 {
     protected static string $resource = AbsensiResource::class;
 
-    // ✅ PERBAIKAN: Hapus kata 'static' dari sini
     protected string $view = 'filament.resources.absensis.pages.detail-absensi';
 
     public Kelas $kelas;
@@ -20,7 +19,7 @@ class DetailAbsensi extends Page
 
     public function mount($record): void
     {
-        $this->kelas = Kelas::with('santris')->findOrFail($record);
+        $this->kelas = Kelas::with(['santris', 'waliKelas'])->findOrFail($record);
         $this->tanggal = request()->get('tanggal', now()->toDateString());
         $this->loadData();
     }
@@ -30,6 +29,7 @@ class DetailAbsensi extends Page
         $santris = $this->kelas->santris;
         $absensis = Absensi::where('kelas_id', $this->kelas->id)
             ->whereDate('tanggal', $this->tanggal)
+            ->with('ustadz')
             ->get()
             ->keyBy('santri_id');
         
@@ -41,10 +41,10 @@ class DetailAbsensi extends Page
                 'nama' => $santri->nama,
                 'nis' => $santri->nis ?? '-',
                 'status' => $absensi?->status,
-                'status_label' => $absensi ? ucfirst($absensi->status) : 'Belum Absen',
+                'status_label' => $absensi ? ucfirst($absensi->status) : 'Belum',
                 'keterangan' => $absensi?->keterangan ?? '-',
                 'waktu' => $absensi?->created_at ? $absensi->created_at->format('H:i') : '-',
-                'diinput' => $absensi?->ustadz->nama ?? '-',
+                'diinput' => $absensi?->ustadz?->nama ?? '-',
             ];
         }
     }

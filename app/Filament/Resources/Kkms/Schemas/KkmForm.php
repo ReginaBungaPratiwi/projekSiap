@@ -7,17 +7,23 @@ use App\Models\Kkm;
 use App\Models\Mapel;
 use App\Models\Semester;
 use App\Models\TahunAjaran;
+use App\Models\JadwalPelajaran;
 use App\Models\Ustadz;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
-use Illuminate\Validation\Rules\Unique;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class KkmForm
 {
     public static function getSchema(): array
     {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        $isUstadz = $user && $user->hasRole('ustadz');
+
         return [
             Section::make('Informasi KKM')
                 ->description('Tentukan KKM untuk mata pelajaran di kelas tertentu')
@@ -28,7 +34,7 @@ class KkmForm
                             ->options(function () {
                                 return TahunAjaran::orderBy('tahun_awal', 'desc')
                                     ->get()
-                                    ->mapWithKeys(fn ($ta) => [$ta->id => $ta->tahun_ajaran]);
+                                    ->mapWithKeys(fn($ta) => [$ta->id => $ta->tahun_ajaran]);
                             })
                             ->default(function () {
                                 return TahunAjaran::where('status', true)->first()?->id;
@@ -45,11 +51,11 @@ class KkmForm
                                 if (!$tahunAjaranId) {
                                     return Semester::orderBy('id', 'desc')
                                         ->get()
-                                        ->mapWithKeys(fn ($s) => [$s->id => $s->semester]);
+                                        ->mapWithKeys(fn($s) => [$s->id => $s->semester]);
                                 }
                                 return Semester::where('tahun_ajaran_id', $tahunAjaranId)
                                     ->get()
-                                    ->mapWithKeys(fn ($s) => [$s->id => ucfirst($s->semester)]);
+                                    ->mapWithKeys(fn($s) => [$s->id => ucfirst($s->semester)]);
                             })
                             ->default(function () {
                                 return Semester::where('status', true)->first()?->id;
@@ -63,9 +69,18 @@ class KkmForm
                         Select::make('kelas_id')
                             ->label('Kelas')
                             ->options(function () {
+                                /** @var \App\Models\User|null $user */
+                                $user = Auth::user();
+                                if ($user && $user->hasRole('ustadz') && $user->ustadz_id) {
+                                    $ustadzId = $user->ustadz_id;
+                                    return Kelas::whereHas('jadwalPelajarans', function ($query) use ($ustadzId) {
+                                        $query->where('ustadz_id', $ustadzId);
+                                    })
+                                        ->orderBy('nama_kelas')
+                                        ->pluck('nama_kelas', 'id');
+                                }
                                 return Kelas::orderBy('nama_kelas')
-                                    ->get()
-                                    ->mapWithKeys(fn ($k) => [$k->id => $k->nama_kelas]);
+                                    ->pluck('nama_kelas', 'id');
                             })
                             ->required()
                             ->searchable()
@@ -74,27 +89,37 @@ class KkmForm
 
                         Select::make('mapel_id')
                             ->label('Mata Pelajaran')
-                            ->options(function () {
-                                return Mapel::orderBy('nama_mapel')
+                            ->options(function ($get) {
+                                $kelasId = $get('kelas_id');
+                                if (!$kelasId) {
+                                    return [];
+                                }
+                                return Kelas::find($kelasId)
+                                    ?->jadwalPelajarans()
+                                    ->with('mapel')
+                                    ->distinct('mapel_id')
                                     ->get()
-                                    ->mapWithKeys(fn ($m) => [$m->id => $m->nama_mapel]);
+                                    ->pluck('mapel.nama_mapel', 'mapel.id');
                             })
                             ->required()
                             ->searchable()
                             ->preload()
+                            ->placeholder('Pilih kelas terlebih dahulu')
                             ->live()
                             ->rules([
-                                fn ($get, $record) => function ($attribute, $value, $fail) use ($get, $record) {
-                                    $exists = Kkm::where('mapel_id', $value)
-                                        ->where('kelas_id', $get('kelas_id'))
-                                        ->where('tahun_ajaran_id', $get('tahun_ajaran_id'))
-                                        ->where('semester_id', $get('semester_id'))
-                                        ->when($record, fn ($q) => $q->where('id', '!=', $record->id))
-                                        ->exists();
+                                function ($get, $record) {
+                                    return function ($attribute, $value, $fail) use ($get, $record) {
+                                        $exists = Kkm::where('mapel_id', $value)
+                                            ->where('kelas_id', $get('kelas_id'))
+                                            ->where('tahun_ajaran_id', $get('tahun_ajaran_id'))
+                                            ->where('semester_id', $get('semester_id'))
+                                            ->when($record, fn($q) => $q->where('id', '!=', $record->id))
+                                            ->exists();
 
-                                    if ($exists) {
-                                        $fail('KKM untuk kombinasi Mapel, Kelas, Tahun Ajaran, dan Semester ini sudah ada.');
-                                    }
+                                        if ($exists) {
+                                            $fail('KKM untuk kombinasi Mapel, Kelas, Tahun Ajaran, dan Semester ini sudah ada.');
+                                        }
+                                    };
                                 },
                             ]),
                     ]),
@@ -102,26 +127,25 @@ class KkmForm
                     Select::make('ustadz_id')
                         ->label('Ustadz Pengampu')
                         ->options(function ($get) {
+                            $kelasId = $get('kelas_id');
                             $mapelId = $get('mapel_id');
 
-                            if (!$mapelId) {
-                                return Ustadz::where('status_aktif', true)
-                                    ->orderBy('nama')
-                                    ->pluck('nama', 'id');
+                            if (!$kelasId || !$mapelId) {
+                                return [];
                             }
 
-                            // Ambil ustadz yang mengajar mapel tersebut
                             return Ustadz::where('status_aktif', true)
-                                ->whereHas('mataPelajarans', function ($query) use ($mapelId) {
-                                    $query->where('mapels.id', $mapelId);
+                                ->whereHas('jadwalPelajarans', function ($query) use ($kelasId, $mapelId) {
+                                    $query->where('kelas_id', $kelasId)
+                                        ->where('mapel_id', $mapelId);
                                 })
                                 ->orderBy('nama')
                                 ->pluck('nama', 'id');
                         })
                         ->searchable()
                         ->preload()
-                        ->placeholder('Pilih Ustadz Pengampu')
-                        ->helperText('Pilih ustadz yang mengajar mapel ini')
+                        ->placeholder('Pilih kelas dan mapel terlebih dahulu')
+                        ->helperText('Ustadz yang mengajar mapel ini di kelas terpilih')
                         ->columnSpanFull(),
 
                     TextInput::make('nilai_kkm')
@@ -129,9 +153,9 @@ class KkmForm
                         ->numeric()
                         ->minValue(0)
                         ->maxValue(100)
-                        ->required()
+                        ->required($isUstadz)
                         ->placeholder('Contoh: 75')
-                        ->helperText('Masukkan nilai KKM antara 0-100')
+                        ->helperText($isUstadz ? 'Masukkan nilai KKM (0-100)' : 'Diisi oleh Ustadz pengampu')
                         ->columnSpanFull(),
                 ]),
         ];

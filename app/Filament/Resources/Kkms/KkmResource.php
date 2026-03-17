@@ -68,7 +68,8 @@ class KkmResource extends Resource
                 ->pluck('id')
                 ->toArray();
 
-            $query->whereIn('kelas_id', $kelasIds);
+            $query->whereIn('kelas_id', $kelasIds)
+                ->where('ustadz_id', $ustadzId);
         }
 
         return $query;
