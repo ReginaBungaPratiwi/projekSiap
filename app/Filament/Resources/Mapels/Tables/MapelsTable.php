@@ -35,20 +35,7 @@ class MapelsTable
             TextColumn::make('nama_jurusan')
                 ->label('Jurusan')
                 ->badge()
-                ->color(fn (string $state): string => match ($state) {
-                    'Diniyah' => 'success',
-                    'Umum' => 'primary',
-                    'IPA' => 'success',
-                    'IPS' => 'warning',
-                    'Bahasa' => 'primary',
-                    'Agama' => 'gray',
-                    'Tahfiz' => 'purple',
-                    'Teknik Komputer' => 'blue',
-                    'Multimedia' => 'pink',
-                    'Akuntansi' => 'green',
-                    'Pemasaran' => 'orange',
-                    default => 'gray',
-                })
+                ->color('gray')
                 ->searchable(query: function ($query, $search) {
                     $query->whereHas('jurusan', function ($q) use ($search) {
                         $q->where('nama_jurusan', 'like', "%{$search}%");
@@ -56,8 +43,8 @@ class MapelsTable
                 })
                 ->sortable(query: function ($query, $direction) {
                     $query->join('jurusans', 'mapels.jurusan_id', '=', 'jurusans.id')
-                          ->orderBy('jurusans.nama_jurusan', $direction)
-                          ->select('mapels.*'); // ✅ Tambahkan ini untuk menghindari konflik kolom
+                        ->orderBy('jurusans.nama_jurusan', $direction)
+                        ->select('mapels.*'); // ✅ Tambahkan ini untuk menghindari konflik kolom
                 }),
 
             TextColumn::make('jenjang')
@@ -65,19 +52,17 @@ class MapelsTable
                 ->sortable()
                 ->label('Jenjang')
                 ->badge()
-                ->color(fn (string $state): string => match ($state) {
-                    'SD' => 'blue',
-                    'SMP' => 'orange',
-                    'SMA' => 'red',
-                    'SMK' => 'purple',
+                ->color(fn(string $state): string => match ($state) {
+                    'SD' => 'success',
+                    'SMP' => 'primary',
+                    'SMA' => 'warning',
+                    'SMK' => 'info',
                     default => 'gray',
                 }),
 
-            // ✅✅✅ PERBAIKAN: Handle both string (old data) and collection (new data)
+            // Kolom pengampu ditampilkan tanpa warna badge
             TextColumn::make('pengampu')
                 ->label('Pengampu')
-                ->badge()
-                ->color('primary')
                 ->formatStateUsing(function ($record) {
                     // Cek jika $record->pengampu adalah Collection (relasi baru)
                     if ($record->pengampu instanceof \Illuminate\Database\Eloquent\Collection) {
@@ -93,7 +78,7 @@ class MapelsTable
                     elseif ($record->relationLoaded('pengampu') && $record->pengampu->isNotEmpty()) {
                         return $record->pengampu->pluck('nama')->join(', ');
                     }
-                    
+
                     return 'Belum ada';
                 })
                 ->sortable(false),

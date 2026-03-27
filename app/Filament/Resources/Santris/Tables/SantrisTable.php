@@ -64,7 +64,6 @@ class SantrisTable
                         });
                     });
                 })
-                ->badge()
                 ->placeholder('-')
                 ->getStateUsing(function ($record) {
                     $riwayatTerbaru = $record->riwayatKelas()
@@ -72,14 +71,14 @@ class SantrisTable
                         ->orderBy('tahun_akademik', 'desc')
                         ->orderBy('semester', 'desc')
                         ->first();
-                    
+
                     return $riwayatTerbaru?->kelas?->nama_kelas;
                 }),
 
             TextColumn::make('jenjang')
                 ->badge()
                 ->sortable()
-                ->color(fn ($state) => match ($state) {
+                ->color(fn($state) => match ($state) {
                     'SD' => 'success',
                     'SMP' => 'primary',
                     'SMA' => 'warning',
@@ -95,7 +94,7 @@ class SantrisTable
                 ->badge()
                 ->sortable()
                 ->label('Status')
-                ->color(fn ($state) => match ($state) {
+                ->color(fn($state) => match ($state) {
                     'aktif' => 'success',
                     'nonaktif' => 'danger',
                     'lulus' => 'warning',

@@ -39,24 +39,23 @@ class KkmsTable
             TextColumn::make('kelas.nama_kelas')
                 ->label('Kelas')
                 ->searchable()
-                ->sortable()
-                ->badge()
-                ->color('success'),
+                ->sortable(),
 
             TextColumn::make('tahunAjaran.tahun_ajaran')
                 ->label('Tahun Ajaran')
-                ->sortable(query: fn (Builder $query, string $direction) => $query
-                    ->leftJoin('tahun_ajarans', 'kkms.tahun_ajaran_id', '=', 'tahun_ajarans.id')
-                    ->orderBy('tahun_ajarans.tahun_awal', $direction)
-                    ->select('kkms.*')
+                ->sortable(
+                    query: fn(Builder $query, string $direction) => $query
+                        ->leftJoin('tahun_ajarans', 'kkms.tahun_ajaran_id', '=', 'tahun_ajarans.id')
+                        ->orderBy('tahun_ajarans.tahun_awal', $direction)
+                        ->select('kkms.*')
                 ),
 
             TextColumn::make('semester.semester')
                 ->label('Semester')
-                ->formatStateUsing(fn ($state) => ucfirst($state))
+                ->formatStateUsing(fn($state) => ucfirst($state))
                 ->sortable()
                 ->badge()
-                ->color(fn ($state) => $state === 'ganjil' ? 'info' : 'warning'),
+                ->color(fn($state) => $state === 'ganjil' ? 'info' : 'warning'),
 
             TextColumn::make('nilai_kkm')
                 ->label('KKM')
@@ -116,7 +115,7 @@ class KkmsTable
                 ->options(function () {
                     return TahunAjaran::orderBy('tahun_awal', 'desc')
                         ->get()
-                        ->mapWithKeys(fn ($ta) => [$ta->id => $ta->tahun_ajaran]);
+                        ->mapWithKeys(fn($ta) => [$ta->id => $ta->tahun_ajaran]);
                 })
                 ->searchable()
                 ->preload()

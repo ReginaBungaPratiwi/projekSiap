@@ -27,14 +27,14 @@ class JadwalPelajaransTable
 
             TextColumn::make('waktu')
                 ->label('Waktu')
-                ->getStateUsing(fn ($record) => $record->waktu)
-                ->sortable(query: fn ($query, $direction) => $query->orderBy('jam_pelajaran_id', $direction)),
+                ->getStateUsing(fn($record) => $record->waktu)
+                ->sortable(query: fn($query, $direction) => $query->orderBy('jam_pelajaran_id', $direction)),
 
             TextColumn::make('hari')
                 ->label('Hari')
-                ->formatStateUsing(fn ($state) => ucfirst($state))
+                ->formatStateUsing(fn($state) => ucfirst($state))
                 ->badge()
-                ->color(fn ($state) => match ($state) {
+                ->color(fn($state) => match ($state) {
                     'senin' => 'info',
                     'selasa' => 'success',
                     'rabu' => 'warning',
@@ -59,30 +59,29 @@ class JadwalPelajaransTable
             TextColumn::make('kelas.nama_kelas')
                 ->label('Kelas')
                 ->searchable()
-                ->sortable()
-                ->badge()
-                ->color('success'),
+                ->sortable(),
 
             TextColumn::make('semester.semester')
                 ->label('Semester')
-                ->formatStateUsing(fn ($state) => ucfirst($state))
+                ->formatStateUsing(fn($state) => ucfirst($state))
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: false),
 
             TextColumn::make('tahunAjaran.tahun_ajaran')
                 ->label('Tahun Ajaran')
-                ->getStateUsing(fn ($record) => $record->tahunAjaran?->tahun_ajaran ?? '-')
-                ->sortable(query: fn ($query, $direction) => $query
-                    ->leftJoin('tahun_ajarans', 'jadwal_pelajarans.tahun_ajaran_id', '=', 'tahun_ajarans.id')
-                    ->orderBy('tahun_ajarans.tahun_awal', $direction)
-                    ->select('jadwal_pelajarans.*')
+                ->getStateUsing(fn($record) => $record->tahunAjaran?->tahun_ajaran ?? '-')
+                ->sortable(
+                    query: fn($query, $direction) => $query
+                        ->leftJoin('tahun_ajarans', 'jadwal_pelajarans.tahun_ajaran_id', '=', 'tahun_ajarans.id')
+                        ->orderBy('tahun_ajarans.tahun_awal', $direction)
+                        ->select('jadwal_pelajarans.*')
                 )
                 ->toggleable(isToggledHiddenByDefault: false),
 
             TextColumn::make('keterangan')
                 ->label('Keterangan')
                 ->limit(30)
-                ->tooltip(fn ($state) => $state)
+                ->tooltip(fn($state) => $state)
                 ->toggleable(isToggledHiddenByDefault: true),
 
             TextColumn::make('created_at')
@@ -101,7 +100,7 @@ class JadwalPelajaransTable
                 ->options(function () {
                     return TahunAjaran::orderBy('tahun_awal', 'desc')
                         ->get()
-                        ->mapWithKeys(fn ($ta) => [$ta->id => $ta->tahun_ajaran]);
+                        ->mapWithKeys(fn($ta) => [$ta->id => $ta->tahun_ajaran]);
                 })
                 ->searchable()
                 ->preload()
@@ -113,7 +112,7 @@ class JadwalPelajaransTable
                     return Semester::with('tahunAjaran')
                         ->orderBy('id', 'desc')
                         ->get()
-                        ->mapWithKeys(fn ($s) => [$s->id => $s->nama_lengkap]);
+                        ->mapWithKeys(fn($s) => [$s->id => $s->nama_lengkap]);
                 })
                 ->searchable()
                 ->preload()

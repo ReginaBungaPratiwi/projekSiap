@@ -32,21 +32,7 @@ class KelasTable
                 ->searchable()
                 ->sortable()
                 ->badge()
-                ->color(fn(string $state): string => match ($state) {
-                    'Diniyah' => 'danger',
-                    'Umum' => 'info',
-                    'IPA' => 'success',
-                    'IPS' => 'warning',
-                    'Bahasa' => 'primary',
-                    'Agama' => 'gray',
-                    'Tahfiz' => 'purple',
-                    'Teknik Komputer' => 'blue',
-                    'Multimedia' => 'pink',
-                    'Akuntansi' => 'green',
-                    'Pemasaran' => 'orange',
-                    'Tata Boga' => 'red',
-                    default => 'gray',
-                }),
+                ->color('gray'),
 
             // ✅ PERBAIKAN: Hapus formatStateUsing, langsung tampilkan nama
             TextColumn::make('waliKelas.nama')
@@ -54,7 +40,7 @@ class KelasTable
                 ->searchable()
                 ->sortable()
                 ->badge()
-                ->color(fn ($state) => $state ? 'success' : 'gray'),
+                ->color(fn($state) => $state ? 'success' : 'gray'),
 
             TextColumn::make('jenjang')
                 ->label('Jenjang')

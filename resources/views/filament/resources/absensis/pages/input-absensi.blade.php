@@ -1,7 +1,7 @@
 <x-filament-panels::page>
 
 <style>
-    /* Light mode */
+    /* Light mode default */
     .abs-card          { border:1px solid #e5e7eb; border-radius:12px; }
     .abs-stat-hadir    { border-radius:12px; padding:16px; text-align:center; background:#f0fdf4; border:1px solid #bbf7d0; }
     .abs-stat-hadir .abs-num  { color:#15803d; }
@@ -24,6 +24,12 @@
     .abs-footer { background:#f9fafb; border-top:1px solid #e5e7eb; }
     .abs-col-muted { font-size:13px; color:#9ca3af; }
     .abs-col-text  { font-size:13px; color:#6b7280; }
+
+    .abs-badge-hadir { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+    .abs-badge-izin  { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+    .abs-badge-sakit { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .abs-badge-alpha { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+    .abs-badge-none  { background:#f9fafb; color:#6b7280; border:1px solid #e5e7eb; }
 
     .abs-radio-hadir { color:#15803d; }
     .abs-radio-izin  { color:#b45309; }
@@ -79,25 +85,19 @@
         <span class="font-semibold text-gray-900 dark:text-white">Input Absensi: {{ $kelas->nama_kelas }}</span>
     </div>
 
-    <!-- Header Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="p-6">
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Input Absensi: {{ $kelas->nama_kelas }}</h1>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Wali Kelas: {{ $kelas->waliKelas->nama ?? '-' }}
-                    </p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal</span>
-                    <input 
-                        type="date" 
-                        wire:model.live="tanggal" 
-                        value="{{ $tanggal }}"
-                        class="rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-sm w-48"
-                    >
-                </div>
+    {{-- Info Kelas & Tanggal --}}
+    <div class="abs-card" style="padding:20px; margin-bottom:24px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+            <div>
+                <div style="font-size:18px; font-weight:700;">{{ $kelas->nama_kelas }}</div>
+                <div class="abs-col-muted" style="margin-top:2px;">Wali Kelas: {{ $kelas->waliKelas->nama ?? '-' }}</div>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-size:14px; font-weight:500;">{{ \Carbon\Carbon::parse($tanggal)->format('d F Y') }}</div>
+                <input type="date"
+                       wire:model.live="tanggal"
+                       style="border:1px solid #d1d5db; border-radius:8px; padding:6px 10px; font-size:13px; background:transparent; color:inherit;">
             </div>
         </div>
     </div>
@@ -125,90 +125,120 @@
     {{-- Tabel --}}
     <div class="abs-card" style="overflow:hidden; margin-bottom:24px;">
 
-        {{-- Header --}}
-        <div class="abs-thead" style="display:grid; grid-template-columns:40px 1fr 260px 1fr; padding:10px 16px;">
-            @foreach(['#','Nama Santri','Status','Keterangan'] as $h)
-                <div class="abs-col-muted" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;">{{ $h }}</div>
-            @endforeach
+        <div style="padding:14px 16px; border-bottom:1px solid #e5e7eb;">
+            <span style="font-size:14px; font-weight:600;">Daftar Absensi Santri</span>
         </div>
 
-        {{-- Rows --}}
-        @foreach ($absensiData as $index => $data)
-            <div class="abs-row" style="display:grid; grid-template-columns:40px 1fr 260px 1fr; padding:14px 16px; align-items:center;">
+        @if(count($absensiData) > 0)
 
-                {{-- No --}}
-                <div class="abs-col-muted">{{ $loop->iteration }}</div>
-
-                {{-- Nama --}}
-                <div>
-                    <div style="font-size:14px; font-weight:500;">{{ $data['nama'] }}</div>
-                    @if (!empty($data['nis']) && $data['nis'] !== '-')
-                        <div class="abs-col-muted" style="margin-top:2px;">{{ $data['nis'] }}</div>
-                    @endif
-                </div>
-
-                {{-- Radio Status --}}
-                <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="radio"
-                               wire:model.live="absensiData.{{ $index }}.status"
-                               value="hadir"
-                               style="accent-color:#16a34a; width:15px; height:15px; cursor:pointer;">
-                        <span class="{{ $data['status'] === 'hadir' ? 'abs-radio-hadir' : 'abs-radio-muted' }}" style="font-size:13px; font-weight:500;">Hadir</span>
-                    </label>
-
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="radio"
-                               wire:model.live="absensiData.{{ $index }}.status"
-                               value="izin"
-                               style="accent-color:#d97706; width:15px; height:15px; cursor:pointer;">
-                        <span class="{{ $data['status'] === 'izin' ? 'abs-radio-izin' : 'abs-radio-muted' }}" style="font-size:13px; font-weight:500;">Izin</span>
-                    </label>
-
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="radio"
-                               wire:model.live="absensiData.{{ $index }}.status"
-                               value="sakit"
-                               style="accent-color:#2563eb; width:15px; height:15px; cursor:pointer;">
-                        <span class="{{ $data['status'] === 'sakit' ? 'abs-radio-sakit' : 'abs-radio-muted' }}" style="font-size:13px; font-weight:500;">Sakit</span>
-                    </label>
-
-                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                        <input type="radio"
-                               wire:model.live="absensiData.{{ $index }}.status"
-                               value="alpha"
-                               style="accent-color:#dc2626; width:15px; height:15px; cursor:pointer;">
-                        <span class="{{ $data['status'] === 'alpha' ? 'abs-radio-alpha' : 'abs-radio-muted' }}" style="font-size:13px; font-weight:500;">Alpha</span>
-                    </label>
-
-                </div>
-
-                {{-- Keterangan --}}
-                <div>
-                    <input type="text"
-                           wire:model="absensiData.{{ $index }}.keterangan"
-                           placeholder="Keterangan..."
-                           class="abs-ket-input"
-                           value="{{ $data['keterangan'] }}">
-                </div>
-
+            {{-- Header --}}
+            <div class="abs-thead" style="display:grid; grid-template-columns:50px 1fr 280px 1fr; padding:10px 16px;">
+                <div class="abs-col-muted" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;">No</div>
+                <div class="abs-col-muted" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;">Nama Santri</div>
+                <div class="abs-col-muted" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;">Status</div>
+                <div class="abs-col-muted" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;">Keterangan</div>
             </div>
-        @endforeach
+
+            {{-- Rows --}}
+            @foreach($absensiData as $index => $data)
+                @php
+                    $radioHadirClass = $data['status'] === 'hadir' ? 'abs-radio-hadir' : 'abs-radio-muted';
+                    $radioIzinClass = $data['status'] === 'izin' ? 'abs-radio-izin' : 'abs-radio-muted';
+                    $radioSakitClass = $data['status'] === 'sakit' ? 'abs-radio-sakit' : 'abs-radio-muted';
+                    $radioAlphaClass = $data['status'] === 'alpha' ? 'abs-radio-alpha' : 'abs-radio-muted';
+                @endphp
+                <div class="abs-row" style="display:grid; grid-template-columns:50px 1fr 280px 1fr; padding:13px 16px; align-items:center;">
+                    <div class="abs-col-muted">{{ $loop->iteration }}</div>
+                    <div>
+                        <div style="font-size:14px; font-weight:500;">{{ $data['nama'] }}</div>
+                        <div class="abs-col-muted" style="margin-top:2px;">{{ $data['nis'] }}</div>
+                    </div>
+                    <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                            <input type="radio"
+                                   wire:model.live="absensiData.{{ $index }}.status"
+                                   value="hadir"
+                                   style="accent-color:#16a34a; width:15px; height:15px; cursor:pointer;">
+                            <span class="{{ $radioHadirClass }}" style="font-size:13px; font-weight:500;">Hadir</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                            <input type="radio"
+                                   wire:model.live="absensiData.{{ $index }}.status"
+                                   value="izin"
+                                   style="accent-color:#d97706; width:15px; height:15px; cursor:pointer;">
+                            <span class="{{ $radioIzinClass }}" style="font-size:13px; font-weight:500;">Izin</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                            <input type="radio"
+                                   wire:model.live="absensiData.{{ $index }}.status"
+                                   value="sakit"
+                                   style="accent-color:#2563eb; width:15px; height:15px; cursor:pointer;">
+                            <span class="{{ $radioSakitClass }}" style="font-size:13px; font-weight:500;">Sakit</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                            <input type="radio"
+                                   wire:model.live="absensiData.{{ $index }}.status"
+                                   value="alpha"
+                                   style="accent-color:#dc2626; width:15px; height:15px; cursor:pointer;">
+                            <span class="{{ $radioAlphaClass }}" style="font-size:13px; font-weight:500;">Alpha</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input type="text"
+                               wire:model="absensiData.{{ $index }}.keterangan"
+                               placeholder="Keterangan..."
+                               class="abs-ket-input"
+                               value="{{ $data['keterangan'] }}">
+                    </div>
+                </div>
+            @endforeach
+
+            {{-- Footer --}}
+            <div class="abs-footer" style="padding:12px 16px; display:flex; align-items:center; flex-wrap:wrap; gap:16px;">
+                <span style="display:flex; align-items:center; gap:5px; font-size:13px;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#16a34a; display:inline-block;"></span>
+                    Hadir: {{ $statistik['hadir'] ?? 0 }}
+                </span>
+                <span style="display:flex; align-items:center; gap:5px; font-size:13px;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#d97706; display:inline-block;"></span>
+                    Izin: {{ $statistik['izin'] ?? 0 }}
+                </span>
+                <span style="display:flex; align-items:center; gap:5px; font-size:13px;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; display:inline-block;"></span>
+                    Sakit: {{ $statistik['sakit'] ?? 0 }}
+                </span>
+                <span style="display:flex; align-items:center; gap:5px; font-size:13px;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#dc2626; display:inline-block;"></span>
+                    Alpha: {{ $statistik['alpha'] ?? 0 }}
+                </span>
+                <span style="font-size:13px; font-weight:600; margin-left:auto;">
+                    Total Santri: {{ count($absensiData) }}
+                </span>
+            </div>
+
+        @else
+            <div class="abs-col-muted" style="padding:48px; text-align:center; font-size:14px;">
+                Tidak ada data santri untuk kelas ini.
+            </div>
+        @endif
 
     </div>
 
-    {{-- Footer --}}
-    <div style="display:flex; align-items:center; justify-content:space-between;">
-        <span class="abs-col-muted">
-            {{ count($absensiData) }} dari {{ count($absensiData) }} santri tercatat
-        </span>
+    {{-- Tombol Simpan dan Kembali --}}
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <x-filament::button
+            color="gray"
+            tag="a"
+            href="{{ \App\Filament\Resources\Absensis\AbsensiResource::getUrl('index') }}"
+            icon="heroicon-o-arrow-left"
+        >
+            Kembali ke Daftar Kelas
+        </x-filament::button>
         
         <x-filament::button 
             wire:click="save" 
             color="success" 
             icon="heroicon-o-check"
-            class="w-auto"
         >
             Simpan Absensi
         </x-filament::button>
