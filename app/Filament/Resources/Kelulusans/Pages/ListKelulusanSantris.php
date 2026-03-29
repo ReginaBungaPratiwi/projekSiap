@@ -89,20 +89,20 @@ class ListKelulusanSantris extends Page implements HasTable
                 TextColumn::make('nis')
                     ->label('NIS')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(false),
 
                 TextColumn::make('nama_lengkap')
                     ->label('Nama Siswa')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(false),
 
                 TextColumn::make('kelas.nama_kelas')
                     ->label('Kelas')
-                    ->sortable(),
+                    ->sortable(false),
 
                 TextColumn::make('tahun_ajaran_display')
                     ->label('Tahun Ajaran')
-                    ->state(fn () => $this->tahunAjaran->tahun_ajaran),
+                    ->state(fn() => $this->tahunAjaran->tahun_ajaran),
 
                 TextColumn::make('status_kelulusan')
                     ->label('Status')
@@ -115,17 +115,17 @@ class ListKelulusanSantris extends Page implements HasTable
                         return $kelulusan?->status ?? 'belum_ditentukan';
                     })
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'lulus' => 'success',
                         'tidak_lulus' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'lulus' => 'Lulus',
                         'tidak_lulus' => 'Tidak Lulus',
                         default => 'Belum di tentukan',
                     })
-                    ->icon(fn (string $state): string => match ($state) {
+                    ->icon(fn(string $state): string => match ($state) {
                         'lulus' => 'heroicon-o-check-circle',
                         'tidak_lulus' => 'heroicon-o-x-circle',
                         default => 'heroicon-o-x-circle',
@@ -137,31 +137,31 @@ class ListKelulusanSantris extends Page implements HasTable
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->color('info')
-                    ->url(fn (Santri $record) => KelulusanResource::getUrl('view-santri', [
+                    ->url(fn(Santri $record) => KelulusanResource::getUrl('view-santri', [
                         'record' => $this->record->id,
                         'santri' => $record->id,
                         'tahun_ajaran' => $this->tahunAjaran->id,
                     ]))
-                    ->visible(fn (): bool => $this->isAdmin()),
+                    ->visible(fn(): bool => $this->isAdmin()),
 
                 // Edit action - for admin only
                 Actions\Action::make('edit')
                     ->label('Edit')
                     ->icon('heroicon-o-pencil-square')
                     ->color('warning')
-                    ->url(fn (Santri $record) => KelulusanResource::getUrl('edit-santri', [
+                    ->url(fn(Santri $record) => KelulusanResource::getUrl('edit-santri', [
                         'record' => $this->record->id,
                         'santri' => $record->id,
                         'tahun_ajaran' => $this->tahunAjaran->id,
                     ]))
-                    ->visible(fn (): bool => $this->isAdmin()),
+                    ->visible(fn(): bool => $this->isAdmin()),
 
                 // Tentukan Kelulusan - for ustadz wali kelas only
                 Actions\Action::make('tentukan_kelulusan')
                     ->label('Tentukan Kelulusan')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->color('primary')
-                    ->url(fn (Santri $record) => KelulusanResource::getUrl('edit-santri', [
+                    ->url(fn(Santri $record) => KelulusanResource::getUrl('edit-santri', [
                         'record' => $this->record->id,
                         'santri' => $record->id,
                         'tahun_ajaran' => $this->tahunAjaran->id,
@@ -178,7 +178,7 @@ class ListKelulusanSantris extends Page implements HasTable
                         return (int) $this->record->wali_kelas_id === (int) $user->ustadz_id;
                     }),
             ])
-            ->defaultSort('nama_lengkap', 'asc');
+            ->defaultSort('id', 'asc');
     }
 
     /**

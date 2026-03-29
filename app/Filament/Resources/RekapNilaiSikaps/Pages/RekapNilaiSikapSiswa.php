@@ -85,12 +85,12 @@ class RekapNilaiSikapSiswa extends Page implements HasTable
                 TextColumn::make('santri.nis')
                     ->label('NIS')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(false),
 
                 TextColumn::make('santri.nama_lengkap')
                     ->label('Nama Siswa')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(false),
 
                 TextColumn::make('disiplin')
                     ->label('Disiplin')
@@ -122,10 +122,10 @@ class RekapNilaiSikapSiswa extends Page implements HasTable
                     ->label('Lihat detail')
                     ->icon('heroicon-o-eye')
                     ->color('gray')
-                    ->url(fn (NilaiSikap $record) => RekapNilaiSikapResource::getUrl('detail', [
+                    ->url(fn(NilaiSikap $record) => RekapNilaiSikapResource::getUrl('detail', [
                         'record' => $record->id,
                     ])),
             ])
-            ->defaultSort('santri.nama_lengkap', 'asc');
+            ->defaultSort('id', 'asc');
     }
 }
