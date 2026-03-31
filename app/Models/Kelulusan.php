@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 class Kelulusan extends Model
 {
@@ -19,6 +20,34 @@ class Kelulusan extends Model
         'status',
         'catatan',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // ✅ SYNC STATUS KELULUSAN KE SANTRI
+        static::saved(function ($kelulusan) {
+            $santri = $kelulusan->santri;
+            if (!$santri) return;
+
+            if ($kelulusan->status === 'lulus' && $santri->status !== 'lulus') {
+                $santri->withoutEvents(function () use ($santri) {
+                    $santri->update(['status' => 'lulus']);
+                });
+                Log::info("Sync: Kelulusan lulus → Santri {$santri->nama_lengkap} status diupdate ke lulus");
+            } elseif ($kelulusan->status === 'tidak_lulus' && $santri->status === 'lulus') {
+                $santri->withoutEvents(function () use ($santri) {
+                    $santri->update(['status' => 'aktif']);
+                });
+                Log::info("Sync: Kelulusan tidak_lulus → Santri {$santri->nama_lengkap} status diupdate ke aktif");
+            } elseif ($kelulusan->status === 'belum_ditentukan' && $santri->status === 'lulus') {
+                $santri->withoutEvents(function () use ($santri) {
+                    $santri->update(['status' => 'aktif']);
+                });
+                Log::info("Sync: Kelulusan belum_ditentukan → Santri {$santri->nama_lengkap} status diupdate ke aktif");
+            }
+        });
+    }
 
     /**
      * Status kelulusan

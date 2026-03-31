@@ -339,12 +339,6 @@
             display: inline-block;
         }
 
-        /* Header gradient */
-        .gradient-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            overflow: hidden;
-        }
 
         /* Styling untuk cell NIS dan Nama */
         .nis-cell {
@@ -369,23 +363,36 @@
             <span class="breadcrumb-active">Input Nilai Sikap Siswa</span>
         </div>
 
-        {{-- Header Info dengan Gradient --}}
-        <div class="gradient-header">
-            <div style="padding: 20px 24px;">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 8px;">Input Nilai Sikap Siswa</h2>
-                        <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px;">
-                            <span style="color: rgba(255,255,255,0.9);">Kelas: <strong style="color: white;">{{ $kelas->nama_kelas ?? '-' }}</strong></span>
-                            <span style="color: rgba(255,255,255,0.7);">|</span>
-                            <span style="color: rgba(255,255,255,0.9);">Semester: <strong style="color: white;">{{ ucfirst($semester->semester ?? '-') }}</strong></span>
-                            <span style="color: rgba(255,255,255,0.7);">|</span>
-                            <span style="color: rgba(255,255,255,0.9);">Tahun Ajaran: <strong style="color: white;">{{ $semester->tahunAjaran->tahun_ajaran ?? '-' }}</strong></span>
-                        </div>
-                    </div>
+        {{-- Informasi Kelas --}}
+        <div class="sikap-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Informasi Kelas
                     @if(isset($canEdit) && !$canEdit)
-                        <span style="display: inline-flex; padding: 4px 12px; background: rgba(255,255,255,0.2); color: white; border-radius: 20px; font-size: 11px;">Mode: Hanya Lihat</span>
+                        <span class="status-badge status-belum" style="margin-left: auto;">Mode: Hanya Lihat</span>
                     @endif
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Kelas</span>
+                    <span class="info-value">{{ $kelas->nama_kelas ?? '-' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Semester</span>
+                    <span class="info-value">{{ ucfirst($semester->semester ?? '-') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tahun Ajaran</span>
+                    <span class="info-value">{{ $semester->tahunAjaran->tahun_ajaran ?? '-' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Wali Kelas</span>
+                    <span class="info-value">{{ $kelas->waliKelas?->nama ?? '-' }}</span>
                 </div>
             </div>
         </div>

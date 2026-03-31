@@ -72,8 +72,7 @@ class SantriForm
                                 ->label('Status')
                                 ->options([
                                     'aktif' => 'Aktif',
-                                    'nonaktif' => 'Nonaktif', 
-                                    'lulus' => 'Lulus',
+                                    'nonaktif' => 'Nonaktif',
                                 ])
                                 ->required()
                                 ->default('aktif'),

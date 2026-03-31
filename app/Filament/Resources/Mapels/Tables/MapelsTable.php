@@ -48,17 +48,16 @@ class MapelsTable
                 }),
 
             TextColumn::make('jenjang')
-                ->searchable()
-                ->sortable()
                 ->label('Jenjang')
                 ->badge()
-                ->color(fn(string $state): string => match ($state) {
+                ->color(fn (string $state): string => match ($state) {
                     'SD' => 'success',
                     'SMP' => 'primary',
                     'SMA' => 'warning',
                     'SMK' => 'info',
                     default => 'gray',
-                }),
+                })
+                ->sortable(),
 
             // Kolom pengampu ditampilkan tanpa warna badge
             TextColumn::make('pengampu')
@@ -108,7 +107,11 @@ class MapelsTable
                     'SMK' => 'SMK',
                 ])
                 ->label('Jenjang')
-                ->placeholder('Semua Jenjang'),
+                ->placeholder('Semua Jenjang')
+                ->query(fn ($query, array $data) => $query->when(
+                    $data['value'],
+                    fn ($q, $value) => $q->whereJsonContains('jenjang', $value)
+                )),
         ];
     }
 

@@ -51,6 +51,7 @@ class MapelForm
             Select::make('jenjang')
                 ->label('Jenjang')
                 ->required()
+                ->multiple()
                 ->options([
                     'SD' => 'SD',
                     'SMP' => 'SMP',
@@ -106,6 +107,7 @@ class MapelForm
 
             Select::make('jenjang')
                 ->label('Jenjang')
+                ->multiple()
                 ->options([
                     'SD' => 'SD',
                     'SMP' => 'SMP',

@@ -28,8 +28,44 @@ class Santri extends Model
     {
         parent::boot();
 
-        // ✅ UPDATE RIWAYAT SETIAP KALI KELAS BERUBAH
+        // ✅ SYNC STATUS SANTRI KE KELULUSAN
         static::updating(function ($santri) {
+            if ($santri->isDirty('status')) {
+                $tahunAjaranAktif = TahunAjaran::where('status', true)->first();
+
+                if ($tahunAjaranAktif && $santri->kelas_id) {
+                    if ($santri->status === 'lulus') {
+                        // Santri diubah jadi lulus → buat/update kelulusan jadi lulus
+                        Kelulusan::withoutEvents(function () use ($santri, $tahunAjaranAktif) {
+                            Kelulusan::updateOrCreate(
+                                [
+                                    'santri_id' => $santri->id,
+                                    'kelas_id' => $santri->kelas_id,
+                                    'tahun_ajaran_id' => $tahunAjaranAktif->id,
+                                ],
+                                [
+                                    'status' => 'lulus',
+                                ]
+                            );
+                        });
+                        Log::info("Sync: Santri {$santri->nama_lengkap} status lulus → Kelulusan diupdate ke lulus");
+                    } else {
+                        // Santri diubah jadi aktif/nonaktif → update kelulusan jika ada
+                        Kelulusan::withoutEvents(function () use ($santri, $tahunAjaranAktif) {
+                            $kelulusan = Kelulusan::where('santri_id', $santri->id)
+                                ->where('kelas_id', $santri->kelas_id)
+                                ->where('tahun_ajaran_id', $tahunAjaranAktif->id)
+                                ->first();
+
+                            if ($kelulusan && $kelulusan->status === 'lulus') {
+                                $kelulusan->update(['status' => 'belum_ditentukan']);
+                            }
+                        });
+                        Log::info("Sync: Santri {$santri->nama_lengkap} status {$santri->status} → Kelulusan diupdate ke belum_ditentukan");
+                    }
+                }
+            }
+
             // Cek jika kelas_id berubah
             if ($santri->isDirty('kelas_id')) {
                 $kelasLama = $santri->getOriginal('kelas_id');
@@ -96,6 +132,11 @@ class Santri extends Model
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
+
+    public function kelulusans(): HasMany
+    {
+        return $this->hasMany(Kelulusan::class, 'santri_id');
     }
 
     public function riwayatKelas(): HasMany
