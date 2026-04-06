@@ -1,0 +1,415 @@
+// ============================================
+// ERD - Sistem Informasi Akademik Pesantren
+// Paste ke https://dbdiagram.io
+// ============================================
+
+// ==================
+// TABEL MASTER
+// ==================
+
+Table jurusans {
+  id bigint [pk, increment]
+  nama_jurusan varchar(255)
+  deskripsi text
+  status boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Master data jurusan (IPA, IPS, Agama, dll)'
+}
+
+Table ustadzs {
+  id bigint [pk, increment]
+  nama varchar(255)
+  nip varchar(255) [unique, note: 'Nomor Induk Pegawai, nullable']
+  jenis_kelamin enum_gender [note: 'L / P']
+  alamat text
+  tempat_lahir varchar(255)
+  tanggal_lahir date
+  status_aktif boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Data guru/ustadz pesantren'
+}
+
+Table tahun_ajarans {
+  id bigint [pk, increment]
+  tahun_awal varchar(4) [note: 'misal: 2025']
+  tahun_akhir varchar(4) [note: 'misal: 2026']
+  semester varchar(255) [note: 'ganjil/genap, nullable']
+  status boolean [default: false, note: 'true = tahun ajaran aktif']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Periode tahun ajaran akademik'
+}
+
+Table semesters {
+  id bigint [pk, increment]
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, not null]
+  semester semester_enum [note: 'ganjil / genap']
+  tanggal_mulai date
+  tanggal_selesai date
+  keterangan text
+  status boolean [default: false, note: 'true = semester aktif']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (tahun_ajaran_id, semester) [unique, name: 'semester_unique']
+  }
+
+  Note: 'Semester per tahun ajaran (1 tahun ajaran = 2 semester)'
+}
+
+Table jam_pelajarans {
+  id bigint [pk, increment]
+  nama_jam varchar(255) [note: 'misal: Jam ke-1']
+  jam_mulai time
+  jam_selesai time
+  keterangan text
+  status boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Master slot waktu pelajaran'
+}
+
+// ==================
+// TABEL AKADEMIK
+// ==================
+
+Table kelas {
+  id bigint [pk, increment]
+  nama_kelas varchar(50)
+  jenjang jenjang_enum [note: 'SD / SMP / SMA / SMK']
+  jurusan_id bigint [ref: > jurusans.id, note: 'nullable, SET NULL']
+  wali_kelas_id bigint [ref: > ustadzs.id, note: 'nullable, SET NULL']
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, note: 'nullable, SET NULL']
+  keterangan text
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Kelas per tahun ajaran, terikat jurusan dan wali kelas'
+}
+
+Table mapels {
+  id bigint [pk, increment]
+  nama_mapel varchar(255)
+  jurusan_id bigint [ref: > jurusans.id, note: 'nullable, mapel umum = null']
+  jenjang json [note: 'Array jenjang: ["SD","SMP","SMA","SMK"]']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Master mata pelajaran'
+}
+
+Table mapel_ustadz {
+  id bigint [pk, increment]
+  mapel_id bigint [ref: > mapels.id, not null]
+  ustadz_id bigint [ref: > ustadzs.id, not null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (mapel_id, ustadz_id) [unique, name: 'mapel_ustadz_unique']
+  }
+
+  Note: 'Pivot: ustadz pengampu mapel (Many-to-Many)'
+}
+
+Table santris {
+  id bigint [pk, increment]
+  nama_lengkap varchar(255)
+  jenis_kelamin enum_gender [note: 'L / P']
+  tempat_lahir varchar(255)
+  tanggal_lahir date
+  alamat text
+  nis varchar(255) [unique, note: 'Nomor Induk Santri']
+  kelas_id bigint [ref: > kelas.id, note: 'nullable, kelas aktif saat ini']
+  jenjang jenjang_enum [note: 'SD / SMP / SMA / SMK']
+  kamar varchar(255) [note: 'nullable']
+  tahun_masuk year
+  status status_santri [default: 'aktif', note: 'aktif / nonaktif / lulus']
+  nama_ayah varchar(255)
+  no_hp_ayah varchar(255)
+  pekerjaan_ayah varchar(255)
+  nama_ibu varchar(255)
+  no_hp_ibu varchar(255)
+  pekerjaan_ibu varchar(255)
+  alamat_ortu text
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Data santri/siswa pesantren beserta data orang tua'
+}
+
+Table santri_kelas {
+  id bigint [pk, increment]
+  santri_id bigint [ref: > santris.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  tahun_akademik varchar(9) [note: 'Format: 2025/2026']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Riwayat kelas santri setiap tahun ajaran'
+}
+
+Table jadwal_pelajarans {
+  id bigint [pk, increment]
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, not null]
+  semester_id bigint [ref: > semesters.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  jam_pelajaran_id bigint [ref: > jam_pelajarans.id, not null]
+  mapel_id bigint [ref: > mapels.id, not null]
+  ustadz_id bigint [ref: > ustadzs.id, note: 'nullable, SET NULL']
+  hari hari_enum [note: 'senin - sabtu']
+  keterangan text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (kelas_id, hari, jam_pelajaran_id, semester_id) [unique, name: 'jadwal_unique']
+  }
+
+  Note: 'Jadwal pelajaran: kapan, di kelas mana, mapel apa, siapa yang mengajar'
+}
+
+// ==================
+// TABEL PENILAIAN
+// ==================
+
+Table kkms {
+  id bigint [pk, increment]
+  mapel_id bigint [ref: > mapels.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, not null]
+  semester_id bigint [ref: > semesters.id, not null]
+  ustadz_id bigint [ref: > ustadzs.id, note: 'nullable, SET NULL']
+  nilai_kkm tinyint [note: '0-100, batas nilai minimum kelulusan']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (mapel_id, kelas_id, tahun_ajaran_id, semester_id) [unique, name: 'kkm_unique']
+  }
+
+  Note: 'Kriteria Ketuntasan Minimal per mapel per kelas per semester'
+}
+
+Table nilais {
+  id bigint [pk, increment]
+  santri_id bigint [ref: > santris.id, not null]
+  mapel_id bigint [ref: > mapels.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, not null]
+  semester_id bigint [ref: > semesters.id, not null]
+  ustadz_id bigint [ref: > ustadzs.id, note: 'nullable, SET NULL']
+  nilai_harian decimal(5,2) [note: 'nullable']
+  nilai_uts decimal(5,2) [note: 'nullable']
+  nilai_uas decimal(5,2) [note: 'nullable']
+  nilai_praktik decimal(5,2) [note: 'nullable']
+  nilai_akhir decimal(5,2) [default: 0, note: 'auto-calculated']
+  nilai_huruf char(1) [default: 'E', note: 'A/B/C/D/E, auto-calculated']
+  catatan text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (santri_id, mapel_id, tahun_ajaran_id, semester_id) [unique, name: 'nilai_unique']
+    (kelas_id, semester_id) [name: 'idx_nilai_kelas_semester']
+    ustadz_id [name: 'idx_nilai_ustadz']
+  }
+
+  Note: 'Nilai akademik santri per mapel per semester'
+}
+
+Table nilai_sikaps {
+  id bigint [pk, increment]
+  santri_id bigint [ref: > santris.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, not null]
+  semester_id bigint [ref: > semesters.id, not null]
+  ustadz_id bigint [ref: > ustadzs.id, note: 'nullable, SET NULL']
+  disiplin char(1) [default: 'A', note: 'A/B/C/D']
+  tanggung_jawab char(1) [default: 'A', note: 'A/B/C/D']
+  kejujuran char(1) [default: 'A', note: 'A/B/C/D']
+  sopan_santun char(1) [default: 'A', note: 'A/B/C/D']
+  kepedulian char(1) [default: 'A', note: 'A/B/C/D']
+  catatan text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (santri_id, tahun_ajaran_id, semester_id) [unique, name: 'nilai_sikap_unique']
+  }
+
+  Note: 'Penilaian sikap/perilaku santri per semester'
+}
+
+// ==================
+// TABEL KELULUSAN & ABSENSI
+// ==================
+
+Table kelulusans {
+  id bigint [pk, increment]
+  santri_id bigint [ref: > santris.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, not null]
+  status status_kelulusan [default: 'belum_ditentukan', note: 'lulus / tidak_lulus / belum_ditentukan']
+  catatan text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (santri_id, kelas_id, tahun_ajaran_id) [unique, name: 'kelulusan_unique']
+  }
+
+  Note: 'Status kelulusan santri per kelas per tahun ajaran. Auto-sync ke santris.status'
+}
+
+Table absensis {
+  id bigint [pk, increment]
+  santri_id bigint [ref: > santris.id, not null]
+  kelas_id bigint [ref: > kelas.id, not null]
+  ustadz_id bigint [ref: > ustadzs.id, not null]
+  tanggal date
+  status status_absensi [note: 'hadir / izin / sakit / alpha']
+  keterangan text
+  tahun_ajaran_id bigint [ref: > tahun_ajarans.id, note: 'nullable']
+  semester semester_enum [note: 'ganjil / genap, nullable']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (santri_id, kelas_id, tanggal) [unique, name: 'unique_santri_kelas_tanggal']
+    (kelas_id, tanggal) [name: 'idx_absensi_kelas_tanggal']
+    (tanggal, status) [name: 'idx_absensi_tanggal_status']
+  }
+
+  Note: 'Rekap kehadiran santri per hari'
+}
+
+// ==================
+// TABEL USER & RBAC
+// ==================
+
+Table users {
+  id bigint [pk, increment]
+  name varchar(255)
+  email varchar(255) [unique]
+  email_verified_at timestamp
+  password varchar(255)
+  remember_token varchar(100)
+  ustadz_id bigint [ref: > ustadzs.id, note: 'nullable, SET NULL']
+  santri_id bigint [ref: > santris.id, note: 'nullable, CASCADE']
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Akun login. Terhubung ke ustadz ATAU santri untuk menentukan profil & hak akses'
+}
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar(255) [note: 'super_admin, admin, ustadz, santri']
+  guard_name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Daftar role (Spatie Permission)'
+}
+
+Table permissions {
+  id bigint [pk, increment]
+  name varchar(255) [note: 'misal: ViewAny:SantriResource, Create:SantriResource']
+  guard_name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Daftar permission (Spatie Permission)'
+}
+
+Table model_has_roles {
+  role_id bigint [ref: > roles.id, not null]
+  model_type varchar(255) [note: 'App\\Models\\User']
+  model_id bigint [note: 'users.id']
+
+  indexes {
+    (role_id, model_id, model_type) [pk]
+  }
+
+  Note: 'Pivot: user memiliki role apa saja'
+}
+
+Table model_has_permissions {
+  permission_id bigint [ref: > permissions.id, not null]
+  model_type varchar(255)
+  model_id bigint
+
+  indexes {
+    (permission_id, model_id, model_type) [pk]
+  }
+
+  Note: 'Pivot: permission langsung ke user (tanpa melalui role)'
+}
+
+Table role_has_permissions {
+  permission_id bigint [ref: > permissions.id, not null]
+  role_id bigint [ref: > roles.id, not null]
+
+  indexes {
+    (permission_id, role_id) [pk]
+  }
+
+  Note: 'Pivot: role memiliki permission apa saja'
+}
+
+// ==================
+// ENUM DEFINITIONS
+// ==================
+
+Enum enum_gender {
+  L [note: 'Laki-laki']
+  P [note: 'Perempuan']
+}
+
+Enum jenjang_enum {
+  SD
+  SMP
+  SMA
+  SMK
+}
+
+Enum semester_enum {
+  ganjil
+  genap
+}
+
+Enum status_santri {
+  aktif
+  nonaktif
+  lulus
+}
+
+Enum status_kelulusan {
+  lulus
+  tidak_lulus
+  belum_ditentukan
+}
+
+Enum status_absensi {
+  hadir
+  izin
+  sakit
+  alpha
+}
+
+Enum hari_enum {
+  senin
+  selasa
+  rabu
+  kamis
+  jumat
+  sabtu
+}

@@ -189,7 +189,13 @@ class RekapNilaiResource extends Resource
                         ->sortable(),
                     \Filament\Tables\Columns\TextColumn::make('tahunAjaran.tahun_ajaran')
                         ->label('Tahun Ajaran')
-                        ->sortable(),
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return $query->orderBy(
+                                \App\Models\TahunAjaran::select('tahun_awal')
+                                    ->whereColumn('tahun_ajarans.id', 'nilais.tahun_ajaran_id'),
+                                $direction
+                            );
+                        }),
                     \Filament\Tables\Columns\TextColumn::make('mapel.nama_mapel')
                         ->label('Mata Pelajaran')
                         ->searchable(),

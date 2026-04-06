@@ -212,7 +212,15 @@ class RekapNilaiSikapResource extends Resource
                 ->columns([
                     TextColumn::make('semester.tahunAjaran.tahun_ajaran')
                         ->label('Tahun Ajaran')
-                        ->sortable()
+                        ->sortable(query: function (Builder $query, string $direction): Builder {
+                            return $query->orderBy(
+                                \App\Models\TahunAjaran::select('tahun_awal')
+                                    ->join('semesters', 'semesters.tahun_ajaran_id', '=', 'tahun_ajarans.id')
+                                    ->whereColumn('semesters.id', 'nilai_sikaps.semester_id')
+                                    ->limit(1),
+                                $direction
+                            );
+                        })
                         ->searchable(),
 
                     TextColumn::make('semester.semester')
