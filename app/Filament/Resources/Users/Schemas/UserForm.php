@@ -65,7 +65,7 @@ class UserForm
 
             // Hubungkan User dengan Santi
             Select::make('santri_id')
-                ->label('Data Santi')
+                ->label('Data Santri')
                 ->options(function () {
                     return Santri::orderBy('nama_lengkap')
                         ->pluck('nama_lengkap', 'id');
