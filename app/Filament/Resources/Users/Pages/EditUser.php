@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Resources\Users\Schemas\UserForm;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -14,9 +15,9 @@ class EditUser extends EditRecord
     {
         $actions = array_values(parent::getHeaderActions());
 
-        $roles = collect($this->record->getRoleNames())->map(fn (string $name): string => strtolower($name));
+        $roles = collect($this->record->getRoleNames())->map(fn(string $name): string => strtolower($name));
         if ($roles->contains('admin') || $roles->contains('super_admin')) {
-            return array_values(array_filter($actions, fn ($action) => ! ($action instanceof DeleteAction)));
+            return array_values(array_filter($actions, fn($action) => ! ($action instanceof DeleteAction)));
         }
 
         return $actions;
@@ -25,5 +26,11 @@ class EditUser extends EditRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['roles'] = collect($this->record->getRoleNames())->toArray();
+        return $data;
     }
 }

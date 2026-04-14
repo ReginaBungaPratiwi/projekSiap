@@ -47,7 +47,8 @@ class UserForm
                 ->multiple()
                 ->preload()
                 ->searchable()
-                ->live(),
+                ->live()
+                ->disabled(fn($operation) => $operation === 'edit'),
 
             // Hubungkan User dengan Ustadz
             Select::make('ustadz_id')
@@ -63,7 +64,7 @@ class UserForm
                 ->helperText('Hubungkan user ini dengan data Ustadz')
                 ->disabled(fn($get) => !empty($get('santri_id'))),
 
-            // Hubungkan User dengan Santi
+            // Hubungkan User dengan Santri
             Select::make('santri_id')
                 ->label('Data Santri')
                 ->options(function () {
@@ -72,8 +73,8 @@ class UserForm
                 })
                 ->searchable()
                 ->preload()
-                ->placeholder('Pilih Santi (opsional)')
-                ->helperText('Hubungkan user ini dengan data Santi')
+                ->placeholder('Pilih Santri (opsional)')
+                ->helperText('Hubungkan user ini dengan data Santri')
                 ->disabled(fn($get) => !empty($get('ustadz_id'))),
         ];
     }
