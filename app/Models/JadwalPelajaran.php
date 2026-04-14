@@ -117,4 +117,26 @@ class JadwalPelajaran extends Model
     {
         return $query->where('hari', $hari);
     }
+
+    /**
+     * Bootstrap any application services.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($jadwal) {
+            $exists = self::where('kelas_id', $jadwal->kelas_id)
+                ->where('hari', $jadwal->hari)
+                ->where('jam_pelajaran_id', $jadwal->jam_pelajaran_id)
+                ->where('semester_id', $jadwal->semester_id)
+                ->exists();
+
+            if ($exists) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'ustadz_id' => ['Ustadz sudah dijadwalkan di waktu yang sama']
+                ]);
+            }
+        });
+    }
 }
