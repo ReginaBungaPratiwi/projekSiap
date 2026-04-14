@@ -16,7 +16,7 @@ class SantriKelas extends Model
         'santri_id',
         'kelas_id',
         'tahun_akademik',
-
+        'semester',
     ];
 
     public function santri(): BelongsTo

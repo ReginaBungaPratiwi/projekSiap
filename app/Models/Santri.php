@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TahunAjaran;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log; // ✅ IMPORT LOG
@@ -129,6 +130,24 @@ class Santri extends Model
         });
     }
 
+    public static function createWithRiwayat(array $data): self
+    {
+        $santri = static::create($data);
+
+        if ($santri->kelas_id) {
+            $tahunAjaranAktif = TahunAjaran::getAktif();
+            if ($tahunAjaranAktif) {
+                $santri->riwayatKelas()->create([
+                    'kelas_id' => $santri->kelas_id,
+                    'tahun_akademik' => $tahunAjaranAktif->tahun_ajaran,
+                    'semester' => $tahunAjaranAktif->semester ?? 'ganjil',
+                ]);
+            }
+        }
+
+        return $santri;
+    }
+
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
@@ -149,6 +168,18 @@ class Santri extends Model
     public function getNamaAttribute()
     {
         return $this->nama_lengkap;
+    }
+
+    public function getKelasSaatIniAttribute(): ?string
+    {
+        $riwayatTerbaru = $this->riwayatKelas()
+            ->with('kelas')
+            ->orderBy('tahun_akademik', 'desc')
+            ->orderBy('semester', 'desc')
+            ->first();
+
+        return $riwayatTerbaru?->kelas?->nama_kelas
+            ?? $this->kelas?->nama_kelas;
     }
 
     public function getKelasPadaTahun($tahunAkademik)

@@ -72,7 +72,8 @@ class SantrisTable
                         ->orderBy('semester', 'desc')
                         ->first();
 
-                    return $riwayatTerbaru?->kelas?->nama_kelas;
+                    return $riwayatTerbaru?->kelas?->nama_kelas
+                        ?? $record->kelas?->nama_kelas;
                 }),
 
             TextColumn::make('jenjang')
