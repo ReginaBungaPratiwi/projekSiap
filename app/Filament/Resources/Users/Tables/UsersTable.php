@@ -34,7 +34,9 @@ class UsersTable
     {
         return [
             EditAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->visible(fn ($record): bool => ! static::isAdminUser($record))
+                ->disabled(fn ($record): bool => static::isAdminUser($record)),
         ];
     }
 
@@ -42,8 +44,17 @@ class UsersTable
     {
         return [
             BulkActionGroup::make([
-                DeleteBulkAction::make(),
+                DeleteBulkAction::make()
+                    ->visible(fn ($records): bool => ! $records->contains(fn ($record) => static::isAdminUser($record)))
+                    ->disabled(fn ($records): bool => $records->contains(fn ($record) => static::isAdminUser($record))),
             ]),
         ];
+    }
+
+    protected static function isAdminUser($record): bool
+    {
+        $roles = collect($record->getRoleNames())
+            ->map(fn (string $name): string => strtolower($name));
+        return $roles->contains('admin') || $roles->contains('super_admin');
     }
 }

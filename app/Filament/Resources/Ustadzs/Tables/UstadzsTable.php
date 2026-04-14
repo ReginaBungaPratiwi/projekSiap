@@ -7,10 +7,8 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\ViewAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\BulkAction;
 use Illuminate\Database\Eloquent\Model;
 
@@ -99,8 +97,6 @@ class UstadzsTable
                 ->requiresConfirmation()
                 ->modalHeading('Nonaktifkan')
                 ->modalDescription('Are you sure you would like to do this?'),
-
-            DeleteAction::make()->label('Hapus'),
         ];
     }
 
@@ -108,8 +104,6 @@ class UstadzsTable
     {
         return [
             BulkActionGroup::make([
-                DeleteBulkAction::make()->label('Hapus yang dipilih'),
-                
                 BulkAction::make('activateSelected')
                     ->label('Aktifkan yang dipilih')
                     ->icon('heroicon-o-check-circle')

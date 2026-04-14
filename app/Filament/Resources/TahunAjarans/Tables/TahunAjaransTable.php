@@ -109,8 +109,6 @@ class TahunAjaransTable
                 })
                 ->hidden(fn ($record) => ! $record->status)
                 ->requiresConfirmation(),
-
-            Actions\DeleteAction::make()->label('Hapus'),
         ];
     }
 
@@ -118,7 +116,6 @@ class TahunAjaransTable
     {
         return [
             Actions\BulkActionGroup::make([
-                Actions\DeleteBulkAction::make()->label('Hapus yang dipilih'),
             ]),
         ];
     }

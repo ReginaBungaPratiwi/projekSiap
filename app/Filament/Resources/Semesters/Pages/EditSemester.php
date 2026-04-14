@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Semesters\Pages;
 
 use App\Filament\Resources\Semesters\SemesterResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class EditSemester extends EditRecord
@@ -12,9 +11,7 @@ class EditSemester extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\DeleteAction::make(),
-        ];
+        return [];
     }
 
     protected function getRedirectUrl(): string

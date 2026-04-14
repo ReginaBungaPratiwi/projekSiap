@@ -135,8 +135,6 @@ class SemestersTable
                 })
                 ->hidden(fn ($record) => !$record->status)
                 ->requiresConfirmation(),
-
-            Actions\DeleteAction::make()->label('Hapus'),
         ];
     }
 
@@ -144,7 +142,6 @@ class SemestersTable
     {
         return [
             Actions\BulkActionGroup::make([
-                Actions\DeleteBulkAction::make()->label('Hapus yang dipilih'),
             ]),
         ];
     }

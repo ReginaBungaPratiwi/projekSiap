@@ -16,6 +16,13 @@ class SemesterForm
 {
     public static function getSchema(): array
     {
+        $defaultTahunAjaranId = TahunAjaran::where('status', true)
+            ->value('id')
+            ?? TahunAjaran::where(function ($query) {
+                $query->where('tahun_awal', date('Y'))
+                    ->orWhere('tahun_akhir', date('Y'));
+            })->value('id');
+
         return [
             Section::make('Data Semester')
                 ->schema([
@@ -27,6 +34,7 @@ class SemesterForm
                         ->searchable()
                         ->preload()
                         ->live()
+                        ->default($defaultTahunAjaranId)
                         ->placeholder('Pilih Tahun Ajaran'),
 
                     Select::make('semester')

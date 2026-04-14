@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Ustadzs\Pages;
 
 use App\Filament\Resources\Ustadzs\UstadzResource;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditUstadz extends EditRecord
@@ -12,9 +11,7 @@ class EditUstadz extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            DeleteAction::make(),
-        ];
+        return [];
     }
 
     protected function getRedirectUrl(): string

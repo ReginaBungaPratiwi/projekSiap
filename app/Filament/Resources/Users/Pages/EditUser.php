@@ -12,9 +12,14 @@ class EditUser extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            DeleteAction::make(),
-        ];
+        $actions = array_values(parent::getHeaderActions());
+
+        $roles = collect($this->record->getRoleNames())->map(fn (string $name): string => strtolower($name));
+        if ($roles->contains('admin') || $roles->contains('super_admin')) {
+            return array_values(array_filter($actions, fn ($action) => ! ($action instanceof DeleteAction)));
+        }
+
+        return $actions;
     }
 
     protected function getRedirectUrl(): string

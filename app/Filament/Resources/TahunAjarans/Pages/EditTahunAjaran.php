@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TahunAjarans\Pages;
 
 use App\Filament\Resources\TahunAjarans\TahunAjaranResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class EditTahunAjaran extends EditRecord
@@ -12,9 +11,7 @@ class EditTahunAjaran extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\DeleteAction::make(),
-        ];
+        return [];
     }
 
     protected function getRedirectUrl(): string

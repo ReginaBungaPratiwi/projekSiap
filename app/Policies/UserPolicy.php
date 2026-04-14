@@ -29,8 +29,13 @@ class UserPolicy
         return $authUser->can('Update:UserResource');
     }
 
-    public function delete(AuthUser $authUser): bool
+    public function delete(AuthUser $authUser, \App\Models\User $user): bool
     {
+        // Cegah delete untuk user dengan role admin atau super_admin
+        $roles = collect($user->getRoleNames())->map(fn ($name) => strtolower($name));
+        if ($roles->contains('admin') || $roles->contains('super_admin')) {
+            return false;
+        }
         return $authUser->can('Delete:UserResource');
     }
 

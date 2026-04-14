@@ -53,12 +53,14 @@ class RoleResource extends BaseRoleResource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->visible(fn ($record): bool => strtolower(str_replace('_', ' ', data_get($record, 'name', ''))) !== 'super admin'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
+                        ->visible(fn ($records): bool => ! $records->contains(fn ($record) => strtolower(str_replace('_', ' ', data_get($record, 'name', ''))) === 'super admin'))
                         ->modalHeading('Hapus role yang dipilih')
                         ->modalDescription('Apakah Anda yakin ingin menghapus role yang dipilih? Tindakan ini tidak dapat dibatalkan.')
                         ->modalSubmitActionLabel('Ya, hapus'),

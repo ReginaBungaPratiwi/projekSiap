@@ -2,13 +2,20 @@
 
 namespace App\Filament\Resources\TahunAjarans\Schemas;
 
+use App\Models\TahunAjaran;
+use Closure;
+use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 
 class TahunAjaranForm
 {
     public static function getSchema(): array
     {
+        $tahunSekarang = (int) date('Y');
+        $tahunDepan = $tahunSekarang + 1;
+
         return [
             TextInput::make('tahun_awal')
                 ->label('Tahun Ajaran Awal')
@@ -18,12 +25,27 @@ class TahunAjaranForm
                 ->minLength(4)
                 ->maxLength(4)
                 ->placeholder('Contoh: 2024')
-                ->helperText('Masukkan tahun awal periode ajaran')
-                ->unique(
-                    table: 'tahun_ajarans', 
-                    column: 'tahun_awal',
-                    ignoreRecord: true
-                )
+                ->default($tahunSekarang)
+                ->disabled()
+                ->helperText(new HtmlString('<span class="text-red-600 font-semibold">Tahun ajaran otomatis ditentukan dari tahun sekarang dan tidak bisa diubah.</span>'))
+                ->rules([
+                    fn (Get $get, ?TahunAjaran $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                        $tahunAkhir = $get('tahun_akhir');
+
+                        if (! $value || ! $tahunAkhir) {
+                            return;
+                        }
+
+                        $exists = TahunAjaran::where('tahun_awal', $value)
+                            ->where('tahun_akhir', $tahunAkhir)
+                            ->when($record, fn ($query) => $query->where('id', '!=', $record->id))
+                            ->exists();
+
+                        if ($exists) {
+                            $fail("Tahun ajaran {$value}/{$tahunAkhir} sudah terdaftar.");
+                        }
+                    },
+                ])
                 ->live(onBlur: true)
                 ->afterStateUpdated(function ($state, $set) {
                     if ($state) {
@@ -39,12 +61,9 @@ class TahunAjaranForm
                 ->minLength(4)
                 ->maxLength(4)
                 ->placeholder('Contoh: 2025')
-                ->helperText('Masukkan tahun akhir periode ajaran')
-                ->unique(
-                    table: 'tahun_ajarans',
-                    column: 'tahun_akhir', 
-                    ignoreRecord: true
-                )
+                ->default($tahunDepan)
+                ->disabled()
+                ->helperText(new HtmlString('<span class="text-red-600 font-semibold">Tahun ajaran otomatis ditentukan dari tahun sekarang dan tidak bisa diubah.</span>'))
                 ->live(onBlur: true)
                 ->afterStateUpdated(function ($state, $set) {
                     if ($state) {
