@@ -129,7 +129,23 @@ class JadwalPelajaranForm
                             ->label('Ustadz')
                             ->options(fn($get) => $get('mapel_id') ? Ustadz::whereIn('id', DB::table('mapel_ustadz')->where('mapel_id', $get('mapel_id'))->pluck('ustadz_id'))->where('status_aktif', true)->orderBy('nama')->get()->mapWithKeys(fn($u) => [$u->id => $u->nama]) : [])
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->rule(
+                                fn($get) => fn(string $attribute, $value, Closure $fail) => (
+                                    filled($get('semester_id')) &&
+                                    filled($get('kelas_id')) &&
+                                    filled($get('hari')) &&
+                                    filled($get('jam_pelajaran_id')) &&
+                                    !blank($value) &&
+                                    \App\Models\JadwalPelajaran::query()
+                                    ->where('ustadz_id', $value)
+                                    ->where('semester_id', $get('semester_id'))
+                                    ->where('hari', $get('hari'))
+                                    ->where('jam_pelajaran_id', $get('jam_pelajaran_id'))
+                                    ->where('kelas_id', '!=', $get('kelas_id'))
+                                    ->exists()
+                                ) ? $fail('Teacher is already scheduled for another class at the same day and time in this semester.') : null
+                            ),
                     ]),
 
                     Textarea::make('keterangan')

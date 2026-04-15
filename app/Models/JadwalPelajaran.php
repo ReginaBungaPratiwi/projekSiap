@@ -126,7 +126,8 @@ class JadwalPelajaran extends Model
         parent::boot();
 
         static::creating(function ($jadwal) {
-            $exists = self::where('kelas_id', $jadwal->kelas_id)
+            $exists = self::where('ustadz_id', $jadwal->ustadz_id)
+                ->where('kelas_id', '!=', $jadwal->kelas_id)
                 ->where('hari', $jadwal->hari)
                 ->where('jam_pelajaran_id', $jadwal->jam_pelajaran_id)
                 ->where('semester_id', $jadwal->semester_id)

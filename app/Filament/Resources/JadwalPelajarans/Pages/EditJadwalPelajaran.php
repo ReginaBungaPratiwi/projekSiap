@@ -30,7 +30,8 @@ class EditJadwalPelajaran extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Check unique constraint excluding current record
-        $exists = \App\Models\JadwalPelajaran::where('kelas_id', $data['kelas_id'])
+        $exists = \App\Models\JadwalPelajaran::where('ustadz_id', $data['ustadz_id'])
+            ->where('kelas_id', '!=', $data['kelas_id'])
             ->where('hari', $data['hari'])
             ->where('jam_pelajaran_id', $data['jam_pelajaran_id'])
             ->where('semester_id', $data['semester_id'])

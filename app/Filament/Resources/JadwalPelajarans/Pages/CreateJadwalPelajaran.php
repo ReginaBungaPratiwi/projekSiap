@@ -22,7 +22,8 @@ class CreateJadwalPelajaran extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Double-check unique constraint before create
-        $exists = \App\Models\JadwalPelajaran::where('kelas_id', $data['kelas_id'])
+        $exists = \App\Models\JadwalPelajaran::where('ustadz_id', $data['ustadz_id'])
+            ->where('kelas_id', '!=', $data['kelas_id'])
             ->where('hari', $data['hari'])
             ->where('jam_pelajaran_id', $data['jam_pelajaran_id'])
             ->where('semester_id', $data['semester_id'])
