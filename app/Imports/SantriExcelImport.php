@@ -4,21 +4,17 @@ namespace App\Imports;
 
 use App\Models\Santri;
 use App\Models\Kelas;
-use App\Models\TahunAjaran;
-use App\Models\SantriKelas;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\Importable;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
-class SantriExcelImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation, SkipsOnFailure
+class SantriExcelImport implements ToModel, WithHeadingRow, WithBatchInserts, WithValidation
 {
-    use Importable, SkipsFailures;
+    use Importable;
 
     protected $kelas_default;
     protected $tahun_masuk_default;
@@ -35,7 +31,6 @@ class SantriExcelImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
             return null;
         }
 
-        // ✅ RETURN NEW MODEL - LET MAATEXCEL HANDLE SAVE
         return new Santri([
             'nama_lengkap' => trim($row['nama_lengkap'] ?? ''),
             'jenis_kelamin' => strtoupper(trim($row['jenis_kelamin'] ?? '')) === 'L' ? 'L' : 'P',
@@ -64,7 +59,6 @@ class SantriExcelImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
             return null;
         }
 
-        // ✅ SAFE DATE PARSING
         if (is_numeric($date)) {
             try {
                 $unixTimestamp = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date);
@@ -96,19 +90,12 @@ class SantriExcelImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
         return 1000;
     }
 
-    public function chunkSize(): int
-    {
-        return 1000;
-    }
-
     public function rules(): array
     {
         return [
             '*.nama_lengkap' => 'required|string|max:255',
             '*.nis' => 'nullable|string|max:50|unique:santris,nis',
             '*.jenis_kelamin' => 'nullable|in:L,P',
-            '*.tanggal_lahir' => 'nullable|date',
-            '*.kelas' => 'nullable|string|max:100',
         ];
     }
 }
